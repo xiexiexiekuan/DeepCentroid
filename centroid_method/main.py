@@ -1,27 +1,32 @@
 import time
+import pandas
 import scipy.io as scio
 import numpy
 import centroid
-import partition
+import centroid_rf
+import centroid_muti
 import drug_label
 from sklearn.model_selection import StratifiedKFold
+from sklearn import preprocessing
+from imblearn.over_sampling import SMOTE  # 随机采样函数 和SMOTE过采样函数
+from sklearn import svm
+from sklearn.feature_selection import SelectFromModel
+from sklearn.ensemble import RandomForestClassifier
 
 # 计时函数
 start_time = time.time()
-# 加载数据
-print('数据预处理：')
 
+# 加载数据
 # 癌症预后数据集--标准化
-mat = scio.loadmat('../centroid_dataset/prognosis_scale/GSE2034.mat')
-express_data = numpy.array(mat['ma2'])  # 表达数据，病人-基因矩阵信息
-prognosis = numpy.array(mat['co'][0])
-gene_id = numpy.array(mat['id'])  # 基因编号
-gene_number = express_data.shape[1]  # 基因数量
-# 已知基因集合获取
-gene_list_known_2 = partition.known_gene_set(gene_id, '../centroid_dataset/known_gene_set/c2.cp.kegg.v7.4.entrez.gmt')
-print('已知基因集合c2数目：', gene_list_known_2.shape[0])
-gene_list_known_5 = partition.known_gene_set(gene_id, '../centroid_dataset/known_gene_set/c5.go.bp.v7.4.entrez.gmt')
-print('已知基因集合c5数目：', gene_list_known_5.shape[0])
+# mat = scio.loadmat('../centroid_dataset/prognosis_scale/GSE2034.mat')
+# express_data = numpy.array(mat['ma2'])  # 表达数据，病人-基因矩阵信息
+# prognosis = numpy.array(mat['co'][0])
+# # gene_id = numpy.array(mat['id'])  # 基因编号
+# gene_number = express_data.shape[1]  # 基因数量
+# # 独立验证数据
+# mat_test = scio.loadmat('../centroid_dataset/prognosis_scale/test_data_top3.mat')
+# data_test = numpy.array(mat_test['ma2'])
+# prognosis_test = numpy.array(mat_test['co'][0])
 
 # # 癌症早期诊断数据集--标准化
 # mat = scio.loadmat('../centroid_dataset/early_diagnosis.mat')
@@ -43,78 +48,148 @@ print('已知基因集合c5数目：', gene_list_known_5.shape[0])
 # express_data = numpy.append(express_data, express_data_m, axis=1)
 # gene_number = express_data.shape[1]  # 基因数量
 
+# # IFS乳腺癌数据--交叉验证数据
+# ifs = numpy.load('../centroid_dataset/nature_IFS/IFS.npy')
+# ifs = ifs.T
+# ifs1 = ifs[24:78]
+# patient = numpy.ones(ifs1.shape[0], dtype=int)
+# ifs2 = numpy.append(ifs[133:347], ifs[421:422], axis=0)
+# normal = numpy.zeros(ifs2.shape[0], dtype=int)
+# prognosis = numpy.append(patient, normal)
+# express_data = numpy.append(ifs1, ifs2, axis=0)
+# express_data = preprocessing.scale(express_data, axis=1)
+# gene_number = express_data.shape[1]  # 基因数量
+# # 独立验证数据
+# ifs = numpy.load('../centroid_dataset/nature_IFS/cc_breast_IFS.npy')
+# patient = numpy.ones(25, dtype=int)
+# normal = numpy.zeros(25, dtype=int)
+# prognosis_test = numpy.append(patient, normal)
+# data_test = ifs.T
+# data_test = preprocessing.scale(data_test, axis=1)
+
+# express_data = numpy.load('../centroid_dataset/nature_IFS/combat/ifs_combat_cut_train.npy')
+# express_data = preprocessing.scale(express_data, axis=1)
+# prognosis = numpy.load('../centroid_dataset/nature_IFS/ifs_label_train.npy')
+# data_test = numpy.load('../centroid_dataset/nature_IFS/combat/ifs_combat_cut_test.npy')
+# data_test = preprocessing.scale(data_test, axis=1)
+# prognosis_test = numpy.load('../centroid_dataset/nature_IFS/ifs_label_test.npy')
+# express_data = numpy.load('../centroid_dataset/nature_IFS/cut-0/ifs-0_train.npy')
+# express_data = preprocessing.scale(express_data, axis=1)
+# prognosis = numpy.load('../centroid_dataset/nature_IFS/ifs_label_train.npy')
+# data_test = numpy.load('../centroid_dataset/nature_IFS/cut-0/ifs-0_test.npy')
+# data_test = preprocessing.scale(data_test, axis=1)
+# prognosis_test = numpy.load('../centroid_dataset/nature_IFS/ifs_label_test.npy')
+
+# # 肝癌
+express_data = numpy.load('../centroid_dataset/liver_cancer/IFS_train_.npy')
+prognosis = numpy.load('../centroid_dataset/liver_cancer/label_train_.npy')
+data_test = numpy.load('../centroid_dataset/liver_cancer/IFS_.npy')
+prognosis_test = numpy.load('../centroid_dataset/liver_cancer/label_.npy')
+
+
+# delfei早期诊断
+# express_data = numpy.load('../centroid_dataset/delfei_early/delfei_train_data.npy')
+# # express_data = preprocessing.scale(express_data, axis=1)
+# prognosis = numpy.load('../centroid_dataset/delfei_early/delfei_train_label.npy')
+# data_test = numpy.load('../centroid_dataset/delfei_early/delfei_test_data.npy')
+# # data_test = preprocessing.scale(data_test, axis=1)
+# prognosis_test = numpy.load('../centroid_dataset/delfei_early/delfei_test_label.npy')
+
+# data_test = numpy.load('../centroid_dataset/delfei_early/delfei_train_data.npy')
+# prognosis_test = numpy.load('../centroid_dataset/delfei_early/delfei_train_label.npy')
+# express_data = numpy.load('../centroid_dataset/delfei_early/delfei_test_data.npy')
+# prognosis = numpy.load('../centroid_dataset/delfei_early/delfei_test_label.npy')
+
+
 # 输出数据信息
-print('数据数据大小：', express_data.shape)
-print('正样本数量：', sum(prognosis))
+print('数据大小：', express_data.shape, end="  ")
+print('正样本数量：', sum(prognosis), end="  ")
+print('数据空值数量：', numpy.isnan(express_data).sum())
 data_time = time.time()
 print("数据预处理的时间：{:.5f} s.".format(data_time - start_time))
 
 # 打印结果
-mcc_set = []
-auc_set = []
+result_set = []
+l_set = []
+p_set = []
+bootstrap_size = 0.9  # 采样系数
 
 # # 5折交叉验证
-# # print('数据空值数量：', numpy.isnan(express_data).sum())
-# # bootstrap_size = 1  # 采样系数
-# for k in range(0, 10):
+# for k in range(0, 1):
+#
 #     print("第 {} 次交叉验证：".format(k+1))
 #     # 按正负样本比例划分数据集
 #     kf = StratifiedKFold(n_splits=5, shuffle=True).split(express_data, prognosis)  # 样本为行
 #     i = 0
 #     for train_, test_ in kf:
 #         i = i + 1
+#         layer_time = time.time()
 #         print("第 {} 折：".format(i))
 #         test_data = express_data[test_]
 #         test_data_label = prognosis[test_]
 #         train = express_data[train_]
 #         train_label = prognosis[train_]
 #
-#         gene_partition_list = partition.random_cut_data(gene_number)  # 划分随机基因集合
-#         gene_partition_list = numpy.append(gene_partition_list, gene_list_known_2, axis=0)  # 添加已知基因集合
-#         gene_partition_list = numpy.append(gene_partition_list, gene_list_known_5, axis=0)
-#         print('基因集合数目：', gene_partition_list.shape[0])
+#         # smote = SMOTE()
+#         # train, train_label = smote.fit_resample(train, train_label)  # 使用原始数据的特征变量和目标变量生成过采样数据集
 #
 #         # 初始化
 #         centroid.initialization()
 #         # 训练模型
-#         centroid.train(train, train_label, gene_partition_list)
-#         # 预测
-#         auc, mcc = centroid.predict(test_data, test_data_label)
-#         mcc_set = numpy.append(mcc_set, mcc)
-#         auc_set = numpy.append(auc_set, auc)
+#         centroid.train(train, train_label, bootstrap_size=bootstrap_size)
+#
+#         # 预测 accuracy, precision, recall, f1_score, auc, mcc
+#         result_, l, p = centroid.predict(test_data, test_data_label)
+#         result_set.append(result_)
+#         l_set.append(l)
+#         p_set.append(p)
+#
+#         print("第 {} 折用时：{:.2f} min.".format(i, (time.time() - layer_time) / 60.0))
 
 
 # 独立验证
-for t in range(0, 10):
-    gene_partition_list = partition.random_cut_data(gene_number)  # 划分随机基因集合
-    gene_partition_list = numpy.append(gene_partition_list, gene_list_known_2, axis=0)  # 添加已知基因集合
-    gene_partition_list = numpy.append(gene_partition_list, gene_list_known_5, axis=0)
-    print('基因集合数目：', gene_partition_list.shape[0])
+for t in range(0, 5):
+    layer_time = time.time()
+
+    # data = SelectFromModel(RandomForestClassifier()).fit(express_data, prognosis)
+    # print(data.get_support())
+    # print(data.transform(express_data).shape)
+    # express_data = express_data[:, data.get_support()]
+    # print(express_data.shape)
+
+
+    # smote = SMOTE()
+    # express_data, prognosis = smote.fit_resample(express_data, prognosis)  # 使用原始数据的特征变量和目标变量生成过采样数据集
 
     # 初始化
     centroid.initialization()
     # 训练模型
-    centroid.train(express_data, prognosis, gene_partition_list)
+    centroid.train(express_data, prognosis, bootstrap_size=bootstrap_size)
     # 测试数据加载
-    mat_test = scio.loadmat('../centroid_dataset/prognosis_scale/test_data_top3.mat')
-    data_test = numpy.array(mat_test['ma2'])
-    prognosis_test = numpy.array(mat_test['co'][0])
+
     print('测试数据大小：', data_test.shape)
-    # 预测
-    auc, mcc = centroid.predict(data_test, prognosis_test)
-    mcc_set = numpy.append(mcc_set, mcc)
-    auc_set = numpy.append(auc_set, auc)
+    # 预测 accuracy, precision, recall, f1_score, auc, mcc
+    result_, l, p = centroid.predict(data_test, prognosis_test)
+    result_set.append(result_)
+    l_set.append(l)
+    p_set.append(p)
+    print("第 {} 次用时：{:.2f} min.".format(t, (time.time() - layer_time) / 60.0))
 
 # 输出预测结果
-print('结果 mcc ：')
-for var in mcc_set:
-    print(var)
-print('结果 auc ：')
-for var in auc_set:
-    print(var)
-
+print('accuracy, precision, recall, f1_score, auc, mcc')
+print(result_set)
+print(numpy.mean(result_set, axis=0))
+# data = pandas.DataFrame(result_set)
+# data.to_csv('result_set.csv', encoding='utf-8')
+#
+# for p in p_set:
+#     l_set.append(p)
+# data = pandas.DataFrame(l_set)
+# data = data.transpose()
+# data.to_csv('l_set.csv', encoding='utf-8')
 
 # 程序结束信息
 end_time = time.time()
-# print("模型总用时：{:.2f} min.".format((end_time - data_time) / 60.0))
-print("程序总用时：{:.2f} min.".format((end_time - start_time) / 60.0))
+print("模型总用时：{:.2f} min.".format((end_time - data_time) / 60.0))
+# print("程序总用时：{:.2f} min.".format((end_time - start_time) / 60.0))
+

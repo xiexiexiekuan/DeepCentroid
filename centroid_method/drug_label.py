@@ -19,6 +19,7 @@ def get_medicine_label():
 def medicine_data_cut(express_data, medicine_label):
     invalid_sample = numpy.where(medicine_label == -1)[0]
     express_data_ = numpy.delete(express_data, invalid_sample, axis=0)  # 表达数据，病人-基因矩阵信息
+
     prognosis = numpy.delete(medicine_label, invalid_sample)
 
     return express_data_, prognosis

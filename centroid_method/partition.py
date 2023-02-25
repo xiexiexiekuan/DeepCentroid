@@ -1,15 +1,20 @@
 import numpy
 import csv
+import math
+import scipy.io as scio
+
+index = 0
 
 
 # 生成某区间内可重复的一定数量的随机数的方法
-def random_cut_data(max_number, random_set_num=2000):
+def random_cut_data(max_number, random_set_num=10):
     random_split_list = []
     # print('max_number: ', max_number)
     # numpy.random.seed(0)  # 设置随机数种子
     for i in range(random_set_num):
         # randint(a, b)生成一个a<=且<b的数
-        random_range = numpy.random.randint(10, 200)
+        random_range = numpy.random.randint(10000, 20000)
+        # random_range = 5
         if random_range > max_number:
             random_range = max_number
         # 有放回的随机抽样，一次抽取size个数表示
@@ -19,6 +24,38 @@ def random_cut_data(max_number, random_set_num=2000):
     # numpy.random.seed()  # 种子重置
     # 新的numpy版本将-创建不同长度或形状的列表或元组的功能-弃用
     return numpy.array(random_split_list, dtype=object)
+
+
+# 按照顺序划分基因集合
+def random_cut_data_order(max_number, random_set_num=500):
+    global index
+    random_split_list = []
+    random_set_num = min(random_set_num, max_number)
+    random_range = min(numpy.random.randint(10, 200), max_number)
+    # index = numpy.random.randint(0, random_range)
+    step = math.ceil(max_number / random_set_num)
+    for i in range(random_set_num):
+        arr = numpy.arange(index, index + random_range)
+        for j in range(random_range):
+            while arr[j] >= max_number:
+                arr[j] = arr[j] - max_number
+        random_split_list.append(arr)
+        index = step + index
+
+    return numpy.array(random_split_list)
+
+
+# 已知基因集合获取
+def get_known_set(gene_partition_list):
+    mat = scio.loadmat('../centroid_dataset/prognosis_scale/GSE2034.mat')
+    gene_id = numpy.array(mat['id'])  # 基因编号
+    gene_list_known_2 = known_gene_set(gene_id, '../centroid_dataset/known_gene_set/c2.cp.kegg.v7.4.entrez.gmt')
+    print('已知基因集合c2数目：', gene_list_known_2.shape[0])
+    gene_list_known_5 = known_gene_set(gene_id, '../centroid_dataset/known_gene_set/c5.go.bp.v7.4.entrez.gmt')
+    print('已知基因集合c5数目：', gene_list_known_5.shape[0])
+    gene_partition_list = numpy.append(gene_partition_list, gene_list_known_2, axis=0)  # 添加已知基因集合
+    gene_partition_list = numpy.append(gene_partition_list, gene_list_known_5, axis=0)
+    return gene_partition_list
 
 
 # 根据已知基因集合进行集合划分
