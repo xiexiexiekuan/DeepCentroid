@@ -1,4 +1,35 @@
 # DeepCentroid
+## brief introduction
+Motivation: Cancer is a complex and diverse disease with extensive genetic heterogeneity. Even patients with the same type of cancer respond to anticancer drugs with wide variation, making precision medicine research a popular area in cancer research. Using omics data to construct classifiers for the corresponding prediction is a popular solution nowadays. However, the high feature dimensionality, small sample size, and category imbalance of omics data make it difficult to train effective and well-generalized models by traditional machine learning methods.
+Results: Combining the excellent stability of the centroid classifier and the strong fitting ability of the deep cascade strategy, we propose a new classifier, called DeepCentroid, and apply it to early diagnosis, prognosis, and drug sensitivity prediction of cancer. DeepCentroid is an integrated learning method with a multi-layer cascade structure. It is divided into two stages: feature scanning and cascade learning, and can dynamically adjust the training scale. Experimental results show that DeepCentroid achieves better performance than traditional machine learning models in all three problems mentioned above, confirming its promising application in precision medicine. In addition, functional annotations show that the features scanned by the model have biological significance, demonstrating that the model also possesses biological interpretability.
+## Environmental configuration
+Name	Version
+imblearn	0.7.12
+libxslt	2.0.3
+nltk	0.9.1
+numpy	2.2.0
+pandas	1.4.4
+partd	0.26.2
+python	4.2.1
+scikit-learn	1.4.0
+scipy	20.3.0
+tqdm	1.5.6
+## dataset
+The experimental data of DeepCentroid are divided into three aspects: early cancer diagnosis aspects, cancer prognosis aspects and drug sensitivity prediction.
+The early cancer diagnosis data are plasma cell-free DNA whole genome sequencing data from lung cancer samples and controls.
+Cancer prognostic data were obtained from Gene Expression Omnibus, the training data were GSE2034 and the independent validation data were GSE7390 , GSE11121 and GSE12093 (Zhang et al. 2009). These four datasets include transcriptomic data from breast cancer patients, as well as clinical data such as follow-up information.
+Drug sensitivity prediction data were obtained from Genomics of Drug Sensitivity in Cancer, including DNA methylation data in multiple cell lines , Robust Multi-Array Average Normalized gene expression data, and drug sensitivity data for cell lines . A more specific presentation of the data can be found in the supplemental content.
+[You can download our data here](https://dmpmlab.github.io/Packages.html)
 
-Precision medicine is a new method of clinical research and patient care. Its focus is to understand and treat diseases by integrating multimodal or multi-omic data from individuals, so as to make personalized diagnosis and treatment strategies that match the pathological characteristics of patients. Because cancer is a complex and diverse disease with great heterogeneity in molecular genetics, even cancer patients with the same pathological type may have different reactions to anticancer drugs, so cancer science has become one of the important research fields of precision medicine. In the precise treatment of cancer, the early diagnosis, prognosis and drug sensitivity prediction of cancer are important topics. Due to the limitations of data and technology, the classifier model of early precision medicine has certain limitations. With the advent of the era of big data in genomics and the rapid development of biotechnology, it is a popular solution to construct classifiers based on the data of genomics for corresponding prediction. However, genomics data generally have high feature dimensions, small sample size and unbalanced categories. The relationship between features is difficult to define, and may also contain multiple redundant information. This makes it difficult for machine learning algorithm models to train effective and generalized classifiers in this case. Therefore, building machine learning algorithms suitable for biomedical data is still a huge challenge in the field of precision medicine.
-In response to the above problems, this paper proposes a precision medical research method based on the Deep Cascade Centroid Classifier, constructs a universal and effective precision medical research model, and applies it to the early diagnosis, prognosis and drug sensitivity prediction of cancer. The deeply cascaded centroid classifier is an integrated learning method, which has a multi-level cascade structure and can perform representation learning. It is divided into two stages: feature scanning and cascade learning. In the feature scanning stage, all features are randomly divided into multiple feature sets of different sizes to mine a set of potential high-dimensional features with common functions. In the cascade learning stage, a centroid classifier is generated according to each feature set for training, and the output results of all centroid classifiers are used as new features for the next level of training. The depth cascade centroid classifier can dynamically adjust the size of the feature scanning stage, and adaptively determine the number of stages according to the size of the data. It can also operate normally on small-scale data. The experimental results show that the deep centroid model has better classification performance on test data, and is superior to other test methods, and can be effectively applied to the field of precision medicine. In addition, the paper uses the gene set with excellent classification effect found in the experiment to carry out high-throughput annotation on the biological function of the gene and excavate the relevant biological significance, so as to provide a theoretical basis for the basic research of disease, pathogenesis and drug discovery.
+
+![image](https://github.com/xiexiexiekuan/DeepCentroid/assets/49866501/2f763b03-ad0f-447a-b3f9-b3f249f69aaf)
+
+
+
+
+
+
+
+
+
+
