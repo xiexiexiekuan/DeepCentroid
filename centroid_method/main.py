@@ -13,20 +13,21 @@ from sklearn import svm
 from sklearn.feature_selection import SelectFromModel
 from sklearn.ensemble import RandomForestClassifier
 
+# time.sleep(7200)
 # 计时函数
 start_time = time.time()
 
 # 加载数据
 # 癌症预后数据集--标准化
-# mat = scio.loadmat('../centroid_dataset/prognosis_scale/GSE2034.mat')
-# express_data = numpy.array(mat['ma2'])  # 表达数据，病人-基因矩阵信息
-# prognosis = numpy.array(mat['co'][0])
-# # gene_id = numpy.array(mat['id'])  # 基因编号
-# gene_number = express_data.shape[1]  # 基因数量
-# # 独立验证数据
-# mat_test = scio.loadmat('../centroid_dataset/prognosis_scale/test_data_top3.mat')
-# data_test = numpy.array(mat_test['ma2'])
-# prognosis_test = numpy.array(mat_test['co'][0])
+mat = scio.loadmat('../centroid_dataset/prognosis_scale/GSE2034.mat')
+express_data = numpy.array(mat['ma2'])  # 表达数据，病人-基因矩阵信息
+prognosis = numpy.array(mat['co'][0])
+# gene_id = numpy.array(mat['id'])  # 基因编号
+gene_number = express_data.shape[1]  # 基因数量
+# 独立验证数据
+mat_test = scio.loadmat('../centroid_dataset/prognosis_scale/test_data_top3.mat')
+data_test = numpy.array(mat_test['ma2'])
+prognosis_test = numpy.array(mat_test['co'][0])
 
 # # 癌症早期诊断数据集--标准化
 # mat = scio.loadmat('../centroid_dataset/early_diagnosis.mat')
@@ -48,44 +49,30 @@ start_time = time.time()
 # express_data = numpy.append(express_data, express_data_m, axis=1)
 # gene_number = express_data.shape[1]  # 基因数量
 
-# # IFS乳腺癌数据--交叉验证数据
-# ifs = numpy.load('../centroid_dataset/nature_IFS/IFS.npy')
-# ifs = ifs.T
-# ifs1 = ifs[24:78]
-# patient = numpy.ones(ifs1.shape[0], dtype=int)
-# ifs2 = numpy.append(ifs[133:347], ifs[421:422], axis=0)
-# normal = numpy.zeros(ifs2.shape[0], dtype=int)
-# prognosis = numpy.append(patient, normal)
-# express_data = numpy.append(ifs1, ifs2, axis=0)
-# express_data = preprocessing.scale(express_data, axis=1)
-# gene_number = express_data.shape[1]  # 基因数量
+# # 乳腺癌早期数据
+# prognosis = numpy.load('../centroid_dataset/data20230315/breast/train/label.npy')
+# express_data = numpy.load('../centroid_dataset/data20230315/breast/train/coverage_new.npy')
 # # 独立验证数据
-# ifs = numpy.load('../centroid_dataset/nature_IFS/cc_breast_IFS.npy')
-# patient = numpy.ones(25, dtype=int)
-# normal = numpy.zeros(25, dtype=int)
-# prognosis_test = numpy.append(patient, normal)
-# data_test = ifs.T
-# data_test = preprocessing.scale(data_test, axis=1)
+# prognosis_test = numpy.load('../centroid_dataset/data20230315/breast/test/label_new.npy')
+# data_test = numpy.load('../centroid_dataset/data20230315/breast/test/coverage.npy')
+# data_test = preprocessing.scale(data_test.T, axis=1)
 
-# express_data = numpy.load('../centroid_dataset/nature_IFS/combat/ifs_combat_cut_train.npy')
+# 肝癌
+# express_data = numpy.load('../centroid_dataset/liver_cancer/IFS_train_.npy')
+# prognosis = numpy.load('../centroid_dataset/liver_cancer/label_train_.npy')
+# data_test = numpy.load('../centroid_dataset/liver_cancer/IFS_.npy')
+# prognosis_test = numpy.load('../centroid_dataset/liver_cancer/label_.npy')
+
+
+# # 肺癌早期诊断
+# express_data = numpy.load('../centroid_dataset/data20230315/lung/lung_train/coverage.npy')
+# express_data = express_data.T
 # express_data = preprocessing.scale(express_data, axis=1)
-# prognosis = numpy.load('../centroid_dataset/nature_IFS/ifs_label_train.npy')
-# data_test = numpy.load('../centroid_dataset/nature_IFS/combat/ifs_combat_cut_test.npy')
+# prognosis = numpy.load('../centroid_dataset/data20230315/lung/ega_train_id.npy')
+# data_test = numpy.load('../centroid_dataset/data20230315/lung/lung_test/coverage.npy')
+# data_test = data_test.T
 # data_test = preprocessing.scale(data_test, axis=1)
-# prognosis_test = numpy.load('../centroid_dataset/nature_IFS/ifs_label_test.npy')
-# express_data = numpy.load('../centroid_dataset/nature_IFS/cut-0/ifs-0_train.npy')
-# express_data = preprocessing.scale(express_data, axis=1)
-# prognosis = numpy.load('../centroid_dataset/nature_IFS/ifs_label_train.npy')
-# data_test = numpy.load('../centroid_dataset/nature_IFS/cut-0/ifs-0_test.npy')
-# data_test = preprocessing.scale(data_test, axis=1)
-# prognosis_test = numpy.load('../centroid_dataset/nature_IFS/ifs_label_test.npy')
-
-# # 肝癌
-express_data = numpy.load('../centroid_dataset/liver_cancer/IFS_train_.npy')
-prognosis = numpy.load('../centroid_dataset/liver_cancer/label_train_.npy')
-data_test = numpy.load('../centroid_dataset/liver_cancer/IFS_.npy')
-prognosis_test = numpy.load('../centroid_dataset/liver_cancer/label_.npy')
-
+# prognosis_test = numpy.load('../centroid_dataset/data20230315/lung/ega_test_id.npy')
 
 # delfei早期诊断
 # express_data = numpy.load('../centroid_dataset/delfei_early/delfei_train_data.npy')
@@ -101,6 +88,34 @@ prognosis_test = numpy.load('../centroid_dataset/liver_cancer/label_.npy')
 # prognosis = numpy.load('../centroid_dataset/delfei_early/delfei_test_label.npy')
 
 
+# drug_response
+# data1 = numpy.load('../centroid_dataset/response/response_gide.npy')
+# label1 = numpy.load('../centroid_dataset/response/response_gide_label.npy')
+# data2 = numpy.load('../centroid_dataset/response/response_kim.npy')
+# label2 = numpy.load('../centroid_dataset/response/response_kim_label.npy')
+# data3 = numpy.load('../centroid_dataset/response/response_liu.npy')
+# label3 = numpy.load('../centroid_dataset/response/response_liu_label.npy')
+# data4 = numpy.load('../centroid_dataset/response/response_riaz.npy')
+# label4 = numpy.load('../centroid_dataset/response/response_riaz_label.npy')
+# # express_data = numpy.append(data3, data4, axis=0)
+# # # # express_data = preprocessing.scale(express_data, axis=1)
+# # prognosis = numpy.append(label3, label4)
+# # data_test = numpy.append(data1, data2, axis=0)
+# # data_test = numpy.append(data_test, data4, axis=0)
+# # # data_test = preprocessing.scale(data_test,axis=1)
+# # prognosis_test = numpy.append(label1, label2)
+# # prognosis_test = numpy.append(prognosis_test, label4)
+# # data_test = numpy.append(data4, data1, axis=0)
+# # data_test = preprocessing.scale(data_test, axis=1)
+# # prognosis_test = numpy.append(label4, label1)
+# express_data = data3
+# prognosis = label3
+# data_test = data4
+# prognosis_test = label4
+
+
+
+
 # 输出数据信息
 print('数据大小：', express_data.shape, end="  ")
 print('正样本数量：', sum(prognosis), end="  ")
@@ -112,10 +127,10 @@ print("数据预处理的时间：{:.5f} s.".format(data_time - start_time))
 result_set = []
 l_set = []
 p_set = []
-bootstrap_size = 0.9  # 采样系数
+bootstrap_size = 0.5  # 采样系数
 
 # # 5折交叉验证
-# for k in range(0, 1):
+# for k in range(0, 5):
 #
 #     print("第 {} 次交叉验证：".format(k+1))
 #     # 按正负样本比例划分数据集
@@ -148,7 +163,7 @@ bootstrap_size = 0.9  # 采样系数
 
 
 # 独立验证
-for t in range(0, 5):
+for t in range(0, 65):
     layer_time = time.time()
 
     # data = SelectFromModel(RandomForestClassifier()).fit(express_data, prognosis)

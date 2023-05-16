@@ -71,6 +71,8 @@ def predict_result(data, y_ture, pro, l):
     # threshold.append(thre)
 
     # 计算结果
+    # print(len(y_ture))
+    # print(distance.shape)
     result, y_pred = model_score(y_ture, distance, True)
     print("训练集预测结果ACC = {:.5f}, AUC = {:.5f}, MCC = {:.5f}".format(result[0], result[4], result[5]), end="  ")
 
@@ -119,8 +121,8 @@ def model_score(y_ture, distance, sign=False):
 
     # if not sign:
     #     print(numpy.average(distance, axis=0))
-    #     print(y_pred)
-    #     print(y_ture)
+    # print(y_pred.shape)
+    # print(y_ture.shape)
 
 
     accuracy = metrics.accuracy_score(y_ture, y_pred)  # 真实值，预测值
@@ -177,16 +179,18 @@ def train(train_data_, train_label, max_train_layer=10, bootstrap_size=1):
         print('第 {} 层训练：'.format(layer), end=" ")
         layer_time = time.time()  # 本层计算时间
 
-        # if layer >= 2:
-        #     extra_list = partition.random_cut_data(train_data_.shape[1])
-        #     extra_partition_list.append(extra_list)
-        #     statistics_data, vector_ = simple_centroid.sample_centroid_list(extra_list, train_data_, train_label)
-        #     # statistics_data = centroid_compute.gene_set_statistics(extra_list, train_data_)
-        #     extra_vector.append(vector_)
-        #     # statistics_data = minmax_scale(statistics_data, (-1, 1), axis=0)
-        #     # 按列拼接上一层输出数据和新数据
-        #     express_data = numpy.append(level_data, statistics_data, axis=1).astype(numpy.float32)
-        #     # express_data = numpy.array(level_data).astype(numpy.float32)
+        if layer >= 2:
+            # extra_list = partition.random_cut_data(train_data_.shape[1])
+            # extra_partition_list.append(extra_list)
+            # statistics_data, vector_ = simple_centroid.sample_centroid_list(extra_list, train_data_, train_label)
+            # # statistics_data = centroid_compute.gene_set_statistics(extra_list, train_data_)
+            # extra_vector.append(vector_)
+            # # statistics_data = minmax_scale(statistics_data, (-1, 1), axis=0)
+            # # 按列拼接上一层输出数据和新数据
+            # express_data = numpy.append(level_data, statistics_data, axis=1).astype(numpy.float32)
+            # # express_data = numpy.array(level_data).astype(numpy.float32)
+
+            express_data = numpy.append(level_data, train_data_, axis=1).astype(numpy.float32)
 
         print("输入数据：", express_data.shape)
 
@@ -205,17 +209,16 @@ def train(train_data_, train_label, max_train_layer=10, bootstrap_size=1):
         vector_ = centroid_compute.centroid_vector(partition_num, data_cut_set)
 
         # 根据验证集verify结果剔除不好的分类器，只在第一层
-        # if layer == 1:
-        #     centroid_vector_, gene_partition_list_, err_set = centroid_compute.verify_centroid_distance(partition_list, vector_, data_cut_set)
-        #     centroid_vector.append(centroid_vector_)
-        #     gene_partition_list.append(gene_partition_list_)
-        # else:
-        centroid_vector.append(vector_)
-        gene_partition_list.append(partition_list)
+        if layer == 1:
+            centroid_vector_, gene_partition_list_, err_set = centroid_compute.verify_centroid_distance(partition_list, vector_, data_cut_set)
+            centroid_vector.append(centroid_vector_)
+            gene_partition_list.append(gene_partition_list_)
+        else:
+            centroid_vector.append(vector_)
+            gene_partition_list.append(partition_list)
 
         # 计算训练集与质心的距离用于下一层训练
         mcc_score_ = predict_result(express_data, train_label, probability, layer-1)
-        express_data = level_data
         print("time：{:.2f} min.".format((time.time() - layer_time) / 60.0))
 
 
@@ -242,8 +245,8 @@ def train(train_data_, train_label, max_train_layer=10, bootstrap_size=1):
             # result = model_score1(train_label, result_)
             # print("svm{} 层测试集预测结果ACC = {:.5f}, AUC = {:.5f}, MCC = {:.5f}".format(layer, result[0], result[4], result[5]))
             # 如果最后一层 mcc=1 就保留当层
-            # if mcc_score_ != 1.0:
-            #     valid_layer -= 1
+            if mcc_score_ != 1.0:
+                valid_layer -= 1
             break
         else:
             mcc = mcc_score_
@@ -261,12 +264,14 @@ def predict(test_data, test_data_label):
     c_distance = test_data
     for i in range(0, valid_layer):
         # print(gene_partition_list[i].shape)
-        # if i > 0:
-        #     statistics_test = simple_centroid.sample_centroid_list_predict(extra_partition_list[i-1], test_data, extra_vector[i-1])
-        #     # statistics_test = centroid_compute.gene_set_statistics(extra_partition_list[i - 1], test_data)
-        #     # statistics_test = minmax_scale(statistics_test, (-1, 1), axis=0)
-        #     c_distance = numpy.append(c_distance, statistics_test, axis=1)  # 按列拼接
-        #     # c_distance = numpy.array(c_distance)
+        if i > 0:
+            # statistics_test = simple_centroid.sample_centroid_list_predict(extra_partition_list[i-1], test_data, extra_vector[i-1])
+            # # statistics_test = centroid_compute.gene_set_statistics(extra_partition_list[i - 1], test_data)
+            # # statistics_test = minmax_scale(statistics_test, (-1, 1), axis=0)
+            # c_distance = numpy.append(c_distance, statistics_test, axis=1)  # 按列拼接
+            # # c_distance = numpy.array(c_distance)
+
+            c_distance = numpy.append(c_distance, test_data, axis=1)  # 按列拼接
 
         # if i == valid_layer-1:
         #     partition_list = gene_partition_list[i]

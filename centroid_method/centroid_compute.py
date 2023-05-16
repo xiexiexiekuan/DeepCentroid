@@ -17,15 +17,13 @@ def data_divide(n, bootstrap_size, partition_list, data, label, pro):
     data_ = []  # 每个基因集合对应的训练集，训练标签，验证集，验证标签
     for j in range(0, n):
         tempt_data = []
-        # bootstrap抽样，训练集约为63%   此处为不放回
+        # bootstrap抽样，训练集约为63%
         index = numpy.random.choice(range(0, times), size=int(times * bootstrap_size), replace=False, p=pro)
         index = numpy.unique(index)  # 去除重复抽样的标签
         difference = numpy.array(list(set(numpy.arange(0, times)) - set(index)))
 
-        p_l = partition_list[j]
-        p_l = numpy.array(p_l, dtype=int)
-        # print(p_l)
-        par = data[:, p_l]  # 根据基因集合提取出数据
+
+        par = data[:, partition_list[j]]  # 根据基因集合提取出数据
 
         tempt_data.append(par[index])
         tempt_data.append(label[index])
@@ -80,28 +78,51 @@ def gene_set_centroid(gene_data, sample_category):
         w_ = c_positive - c_negative  # 权向量
         # print("c = {}, w = {}".format(c, w))
         array_centroid.append([c_, w_])
-    return array_centroid
+    return numpy.array(array_centroid)
 
+
+def sample_centroid_distance_alone(centroid_vector, data):
+    sample_num = data.shape[0]
+
+    inner_array = []  # 所有样本的质心距离向量
+    for i in range(0, sample_num):  # 依次计算每个样本，共sample_num次
+        inner_product = 0  # 内积
+        for index in range(0, centroid_vector.shape[0]):
+            d = centroid_vector[index]
+            inner_product += (data[i][index] - d[0]) * d[1]
+
+        inner_array.append(inner_product)  # sample_num的矩阵
+    return numpy.array(inner_array)
 
 # 分别对每个样本计算其与质心的距离
 def sample_centroid_distance(gene_partition_list, centroid_vector_, data):
-    sample_num = data.shape[0]
-    print(data.shape)
     inner_array = []  # 所有样本的质心距离向量
-    for i in range(0, sample_num):  # 依次计算每个样本，共sample_num次
-        inner_p_array = []  # 一个样本的质心距离向量
-        for index, gene_set in enumerate(gene_partition_list):  # 按行遍历基因集合，共N次
-            inner_product = 0  # 内积
-            for index_k, k in enumerate(gene_set):  # 遍历每个基因集合的下角标，共M次
-                # print(gene_set)
-                d = centroid_vector_[index][index_k]
-                inner_product += (data[i][k] - d[0]) * d[1]
-            inner_p_array.append(inner_product)  # N*1的矩阵
-        # print(inner_p_array)
+    for index, gene_set in enumerate(gene_partition_list):  # 按行遍历基因集合，共N次
+        data_ = data[:, gene_set]
+        # print(centroid_vector_[index].shape)
+        # print(data_.shape)
+        inner_p_array = sample_centroid_distance_alone(centroid_vector_[index], data_)
         inner_array.append(inner_p_array)  # sample_num*N*1的矩阵
-    distance = numpy.transpose(inner_array)  # N*sample_num*1的矩阵
+
+    # sample_num = data.shape[0]
+    # # print(data.shape)
+    # inner_array = []  # 所有样本的质心距离向量
+    # for i in range(0, sample_num):  # 依次计算每个样本，共sample_num次
+    #     inner_p_array = []  # 一个样本的质心距离向量
+    #     for index, gene_set in enumerate(gene_partition_list):  # 按行遍历基因集合，共N次
+    #         inner_product = 0  # 内积
+    #         for index_k, k in enumerate(gene_set):  # 遍历每个基因集合的下角标，共M次
+    #             # print(gene_set)
+    #             d = centroid_vector_[index][index_k]
+    #             inner_product += (data[i][k] - d[0]) * d[1]
+    #         inner_p_array.append(inner_product)  # N*1的矩阵
+    #     # print(inner_p_array)
+    #     inner_array.append(inner_p_array)  # sample_num*N*1的矩阵
+    distance = numpy.array(inner_array)  # N*sample_num*1的矩阵
 
     return distance
+
+
 
 
 # 分别对每个样本计算其与质心的距离--剪枝
@@ -158,7 +179,7 @@ def verify_centroid_distance(gene_partition_list, centroid_vector_, data):
     #         i += 1
 
     # global times_, best_gene_set
-    # arr_max = heapq.nlargest(500, best_set)  # 获取前五大的值并排序
+    # arr_max = heapq.nlargest(1000, best_set)  # 获取前五大的值并排序
     # index_max = map(best_set.index, arr_max)  # 获取前五大的值下标
     #
     # for h in list(index_max):
@@ -173,9 +194,9 @@ def verify_centroid_distance(gene_partition_list, centroid_vector_, data):
     # times_ += 1
     # if times_ == 5:
     #     times_ = 0
-    #     gene_annotation.best_gene_symbol_prognosis(best_gene_set)
+    #     # gene_annotation.best_gene_symbol_prognosis(best_gene_set)
     #     # gene_annotation.best_gene_symbol_drug(best_gene_set)
-    #     # gene_annotation.best_gene_symbol_liver(best_gene_set)
+    #     gene_annotation.best_gene_symbol_liver(best_gene_set)
 
     print('删除分类器数目 mcc < 0 : ', i, i_)
     vector = numpy.array(centroid_vector_[value], dtype=object)

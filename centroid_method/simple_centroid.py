@@ -81,8 +81,15 @@ def sample_centroid_list(extra_partition_list, train_data, train_label):
 
         # centroid_vector = gene_centroid(data[valid_index], train_label[valid_index])
         centroid_vector = gene_centroid(data, train_label)
-        extra_vector.append(centroid_vector)
+
         c_distance = sample_centroid_distance(centroid_vector, data)
+        y_pred = numpy.int64(c_distance >= 0)  # 预测标签
+        mcc = metrics.matthews_corrcoef(train_label, y_pred)
+        if mcc <= 0:
+            print('111111111111111111111111111111')
+            continue
+
+        extra_vector.append(centroid_vector)
         result.append(c_distance)
     result = numpy.array(result).T
     return result, extra_vector  # 样本x基因集合

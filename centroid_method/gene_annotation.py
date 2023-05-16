@@ -73,10 +73,19 @@ def best_gene_symbol_liver(dic):
     # print(dic_sort)
 
     # ENSG ID与基因名称转化
-    gencode_ = numpy.load('../centroid_dataset/liver_cancer/gencode.npy')
+    # gencode_ = numpy.load('../centroid_dataset/liver_cancer/gencode.npy')
     gencode = {}
-    for i in gencode_:
-        gencode[i[0]] = i[1]
+    data = open('../centroid_dataset/liver_cancer/fragment_feature/mart_export.txt')
+    for i in data:
+        l = len(i)
+        d = i[0:l - 1]
+        d1 = d.split('\t')
+        if d1[1] == '':
+            continue
+        gencode[d1[0]] = d1[1]
+
+    # for i in gencode_:
+    #     gencode[i[0]] = i[1]
     # print(gencode)
 
     # 特征对应的ENSG ID

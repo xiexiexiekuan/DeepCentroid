@@ -7,13 +7,13 @@ index = 0
 
 
 # 生成某区间内可重复的一定数量的随机数的方法
-def random_cut_data(max_number, random_set_num=10):
+def random_cut_data(max_number, random_set_num=50):
     random_split_list = []
     # print('max_number: ', max_number)
     # numpy.random.seed(0)  # 设置随机数种子
     for i in range(random_set_num):
         # randint(a, b)生成一个a<=且<b的数
-        random_range = numpy.random.randint(10000, 20000)
+        random_range = numpy.random.randint(int(max_number*0.25), int(max_number*0.5))
         # random_range = 5
         if random_range > max_number:
             random_range = max_number
