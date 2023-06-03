@@ -5,15 +5,25 @@ import scipy.io as scio
 
 index = 0
 
+gene_set_num = 0
+gene_set_min = 0
+gene_set_max = 0
+
+def initialization(set_num, set_min, set_max):
+    global gene_set_num, gene_set_min, gene_set_max
+    gene_set_num = set_num
+    gene_set_min = set_min
+    gene_set_max = set_max
 
 # 生成某区间内可重复的一定数量的随机数的方法
-def random_cut_data(max_number, random_set_num=50):
+def random_cut_data(max_number):
+    random_set_num = gene_set_num
     random_split_list = []
     # print('max_number: ', max_number)
     # numpy.random.seed(0)  # 设置随机数种子
     for i in range(random_set_num):
         # randint(a, b)生成一个a<=且<b的数
-        random_range = numpy.random.randint(int(max_number*0.25), int(max_number*0.5))
+        random_range = numpy.random.randint(gene_set_min, gene_set_max)
         # random_range = 5
         if random_range > max_number:
             random_range = max_number
@@ -27,11 +37,12 @@ def random_cut_data(max_number, random_set_num=50):
 
 
 # 按照顺序划分基因集合
-def random_cut_data_order(max_number, random_set_num=500):
+def random_cut_data_order(max_number):
+    random_set_num = gene_set_num
     global index
     random_split_list = []
     random_set_num = min(random_set_num, max_number)
-    random_range = min(numpy.random.randint(10, 200), max_number)
+    random_range = min(numpy.random.randint(gene_set_min, gene_set_max), max_number)
     # index = numpy.random.randint(0, random_range)
     step = math.ceil(max_number / random_set_num)
     for i in range(random_set_num):
@@ -80,7 +91,7 @@ def known_gene_set(gene_id, file_name):
             else:
                 # print('删除基因编号：', i)
                 pass  # 如果没有找到，就跳过该基因，不予保存
-        if 10 <= len(gene_subscript_set_current) <= 200:
+        if gene_set_min <= len(gene_subscript_set_current) <= gene_set_max:
             # print(len(gene_subscript_set_current))
             gene_subscript_set.append(numpy.array(gene_subscript_set_current, dtype=object).astype('int32'))
         else:

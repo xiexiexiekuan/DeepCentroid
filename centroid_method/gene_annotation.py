@@ -68,13 +68,14 @@ def best_gene_symbol_drug(dic):
     data.to_csv('best_set_fragment.csv', encoding='utf-8')
 
 
-def best_gene_symbol_liver(dic):
+def best_gene_symbol_diagnosis(dic):
     dic_sort = sorted(dic.items(), key=lambda x: x[1], reverse=True)
     # print(dic_sort)
 
     # ENSG ID与基因名称转化
     # gencode_ = numpy.load('../centroid_dataset/liver_cancer/gencode.npy')
     gencode = {}
+    # 肝癌的特征与肺癌的特征对应关系一致
     data = open('../centroid_dataset/liver_cancer/fragment_feature/mart_export.txt')
     for i in data:
         l = len(i)

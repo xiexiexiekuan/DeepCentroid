@@ -10,27 +10,41 @@
 # from sklearn.ensemble import RandomForestClassifier
 # from sklearn.neural_network import MLPClassifier
 # from deepforest import CascadeForestClassifier
+# from sklearn.feature_selection import SelectFromModel
 # import xgboost
 # from sklearn import svm
 #
+# ##########################################################################################
+# # 此文件对应消融实验2，多种分类器集成测试，使用方式为将main.py文件的centroid文件替换为centroid_muti即可
+# # 注意该文件分类器类型较多，注意安装环境，本文为python3.6
+#
 # centroid_vector = []  # 第一层质心分类器生成的质心向量
 # gene_partition_list = []  # 质心分类器基因集合
+# extra_partition_list = []  # 额外数据基因集合--未使用
 # level_data = []  # 层之间传输数据
 # layer = 1  # 训练层数
 # valid_layer = 1  # 有效训练层数
+# extra_vector = []  # 未使用
 # probability = []
+# feature_select = []
+# is_feature_select = False  # 是否特征筛选
 # model = []
 #
 #
-#
 # # 初始化
-# def initialization():
-#     global centroid_vector, gene_partition_list, level_data, layer, valid_layer, model
+# def initialization(select, gene_set_num, gene_set_min, gene_set_max):
+#     partition.initialization(gene_set_num, gene_set_min, gene_set_max)
+#     centroid_compute.initialization(gene_set_num)
+#     global centroid_vector, gene_partition_list, extra_partition_list, level_data, layer, valid_layer, extra_vector, feature_select, is_feature_select, model
 #     centroid_vector = []
 #     gene_partition_list = []
+#     extra_partition_list = []
 #     level_data = []
 #     layer = 1
 #     valid_layer = 1
+#     extra_vector = []
+#     feature_select = []
+#     is_feature_select = select
 #     model = []
 #
 #
@@ -62,8 +76,15 @@
 #
 #
 # # 训练
-# def train(train_data_, train_label, max_train_layer=10, bootstrap_size=1):
-#     global layer, valid_layer, centroid_vector, gene_partition_list, level_data, probability
+# def train(train_data_, train_label, max_train_layer, known_feature_set, bootstrap_size, is_sliding_scan, cut_centroid, function_annotation):
+#     global layer, valid_layer, centroid_vector, gene_partition_list, extra_partition_list, level_data, probability, extra_vector, feature_select
+#
+#     if is_feature_select:
+#         data = SelectFromModel(RandomForestClassifier()).fit(train_data_, train_label)
+#         feature_select = data.get_support()
+#         # print(train_data_.shape)
+#         train_data_ = train_data_[:, feature_select]
+#         print('feature_select: ', train_data_.shape)
 #
 #     # 获取每个基因集合对应的训练集，训练标签，验证集，验证标签
 #     probability = centroid_compute.probability(train_label)
@@ -74,15 +95,28 @@
 #     layer_time = time.time()  # 本层计算时间
 #     print("输入数据：", express_data.shape)
 #     # 基因集合数目
-#     partition_list = partition.random_cut_data(express_data.shape[1])  # 划分随机基因集合
+#     if not is_sliding_scan:
+#         partition_list = partition.random_cut_data(express_data.shape[1])  # 划分随机基因集合
+#     else:
+#         partition_list = partition.random_cut_data_order(express_data.shape[1])  # 划分随机基因集合
+#     # 如果添加已知基因集合，那么在第一层时添加
+#     if layer == 1 and known_feature_set:
+#         partition_list = partition.get_known_set(partition_list)  # 获取已知基因集合
 #     partition_num = partition_list.shape[0]
+#
 #     data_cut_set = centroid_compute.data_divide(partition_num, bootstrap_size, partition_list, express_data, train_label, probability)
 #
 #     # 计算所有基因的质心向量，保存输出的N*M*2的矩阵，即每个基因集合计算出关于质心的M*2个变量
 #     vector_ = centroid_compute.centroid_vector(partition_num, data_cut_set)
 #
 #     # 根据验证集verify结果剔除不好的分类器，只在第一层
-#     centroid_vector, gene_partition_list, err_set = centroid_compute.verify_centroid_distance(partition_list, vector_, data_cut_set)
+#     if layer == 1 and cut_centroid:
+#         centroid_vector_, gene_partition_list_ = centroid_compute.verify_centroid_distance(partition_list, vector_, data_cut_set, False)  # 不进行基因注释
+#         centroid_vector = centroid_vector_  # 此处只保留一层质心分类器结果，因此使用赋值即可
+#         gene_partition_list = gene_partition_list_
+#     else:
+#         centroid_vector = vector_
+#         gene_partition_list = partition_list
 #
 #     # 计算训练集与质心的距离用于下一层训练
 #     distance = centroid_compute.sample_centroid_distance(gene_partition_list, centroid_vector, express_data)
@@ -120,6 +154,9 @@
 #
 # # 预测
 # def predict(test_data, test_data_label):
+#
+#     if is_feature_select:
+#         test_data = test_data[:, feature_select]
 #
 #     c_distance = test_data
 #     c_distance = centroid_compute.sample_centroid_distance(gene_partition_list, centroid_vector, c_distance)

@@ -8,6 +8,11 @@ import gene_annotation
 threshold = 0  # 分类阈值
 times_ = 0
 best_gene_set = {}
+gene_set_num = 0
+
+def initialization(set_num):
+    global gene_set_num
+    gene_set_num = set_num
 
 
 
@@ -104,20 +109,6 @@ def sample_centroid_distance(gene_partition_list, centroid_vector_, data):
         inner_p_array = sample_centroid_distance_alone(centroid_vector_[index], data_)
         inner_array.append(inner_p_array)  # sample_num*N*1的矩阵
 
-    # sample_num = data.shape[0]
-    # # print(data.shape)
-    # inner_array = []  # 所有样本的质心距离向量
-    # for i in range(0, sample_num):  # 依次计算每个样本，共sample_num次
-    #     inner_p_array = []  # 一个样本的质心距离向量
-    #     for index, gene_set in enumerate(gene_partition_list):  # 按行遍历基因集合，共N次
-    #         inner_product = 0  # 内积
-    #         for index_k, k in enumerate(gene_set):  # 遍历每个基因集合的下角标，共M次
-    #             # print(gene_set)
-    #             d = centroid_vector_[index][index_k]
-    #             inner_product += (data[i][k] - d[0]) * d[1]
-    #         inner_p_array.append(inner_product)  # N*1的矩阵
-    #     # print(inner_p_array)
-    #     inner_array.append(inner_p_array)  # sample_num*N*1的矩阵
     distance = numpy.array(inner_array)  # N*sample_num*1的矩阵
 
     return distance
@@ -126,14 +117,13 @@ def sample_centroid_distance(gene_partition_list, centroid_vector_, data):
 
 
 # 分别对每个样本计算其与质心的距离--剪枝
-def verify_centroid_distance(gene_partition_list, centroid_vector_, data):
+def verify_centroid_distance(gene_partition_list, centroid_vector_, data, function_annotation):
 
     list_num = gene_partition_list.shape[0]
     value = []
     i = 0
     i_ = 0
     score_l = []
-    err_set = []
     best_set = []
     for k in range(0, list_num):
         inner_array = []  # 一个分类器的所有验证样本的质心距离向量   1*样本的矩阵
@@ -149,7 +139,6 @@ def verify_centroid_distance(gene_partition_list, centroid_vector_, data):
         inner_array = numpy.array(inner_array)
         classifier = numpy.int64(inner_array >= threshold)
         mcc_score = metrics.matthews_corrcoef(label, classifier)
-        acc_score = metrics.accuracy_score(label, classifier)  # 真实值，预测值
         score_l.append(mcc_score)
 
         best_set.append(mcc_score)
@@ -157,59 +146,41 @@ def verify_centroid_distance(gene_partition_list, centroid_vector_, data):
         if mcc_score >= 0:
             value.append(k)
             i_ += 1
-            # err = 0.5*exp(acc_score/(1-acc_score))
-            # print(1-acc_score)
-            # err_set.append(err)
         else:
             i = i + 1
 
-    # num = numpy.sum(err_set)
-    # for i in range(len(err_set)):
-    #     err_set[i] = err_set[i] / num
-    # score_o = sorted(score_l)
-    # print(score_o[int(len(score_o) * 0.5)], score_o[int(len(score_o))-1])
-    # limit_new = score_o[int(len(score_o) * 0.5)]
-    # i = 0
-    #
-    # for index, var in enumerate(score_l):
-    #     if var >= limit_new:
-    #         value.append(index)
-    #         i_ += 1
-    #     else:
-    #         i += 1
+    if function_annotation:  # 如果功能注释
+        global times_, best_gene_set, gene_set_num
+        arr_max = heapq.nlargest(gene_set_num, best_set)  # 获取前 多少 的值并排序
+        index_max = map(best_set.index, arr_max)  # 获取前 多少 的值下标
 
-    # global times_, best_gene_set
-    # arr_max = heapq.nlargest(1000, best_set)  # 获取前五大的值并排序
-    # index_max = map(best_set.index, arr_max)  # 获取前五大的值下标
-    #
-    # for h in list(index_max):
-    #     data = numpy.array(gene_partition_list[h])
-    #     for d in data:
-    #         if d in best_gene_set:
-    #             best_gene_set[d] = best_gene_set[d] + 1
-    #         else:
-    #             best_gene_set[d] = 1
-    # # data = pandas.DataFrame(data)
-    # # data.to_csv('best_set'+str(times_)+'.csv', encoding='utf-8')
-    # times_ += 1
-    # if times_ == 5:
-    #     times_ = 0
-    #     # gene_annotation.best_gene_symbol_prognosis(best_gene_set)
-    #     # gene_annotation.best_gene_symbol_drug(best_gene_set)
-    #     gene_annotation.best_gene_symbol_liver(best_gene_set)
+        for h in list(index_max):
+            data = numpy.array(gene_partition_list[h])
+            for d in data:
+                if d in best_gene_set:
+                    best_gene_set[d] = best_gene_set[d] + 1
+                else:
+                    best_gene_set[d] = 1
+        # data = pandas.DataFrame(data)
+        # data.to_csv('best_set'+str(times_)+'.csv', encoding='utf-8')
+        times_ += 1
+        if times_ == 5:  # 一次五折交叉验证输出一个文件
+            times_ = 0
+###############################################################################
+# 由于数据来源不同，处理方式不同，因此三个函数对应三种数据，需要用户手动修改
+            # gene_annotation.best_gene_symbol_prognosis(best_gene_set)  # 预后
+            # gene_annotation.best_gene_symbol_drug(best_gene_set)  # 药物
+            gene_annotation.best_gene_symbol_diagnosis(best_gene_set)  # 早期
+###############################################################################
 
-    print('删除分类器数目 mcc < 0 : ', i, i_)
+    print('删除分类器数目 mcc < 0 : ', i, '删除',i_, '保留')
     vector = numpy.array(centroid_vector_[value], dtype=object)
     plist = gene_partition_list[value]
 
-    # num = numpy.sum(err_set)
-    # for i in range(len(err_set)):
-    #     err_set[i] = err_set[i] / num
-
-    return vector, plist, numpy.diag(err_set)
+    return vector, plist
 
 
-# 一维数组和 特征x2的数组内积
+# 一维数组和 特征x2的数组内积--未使用
 def inner(v_data, c_vector):
     num = len(v_data)
     s = 0
@@ -233,8 +204,9 @@ def probability(label):
             pro[i] = n_p
         else:
             pro[i] = p_p
-    # print(pro)
+    # print(pro)  # 此时少数类样本概率更高
 
+    # 下面这部分为上面部分替代品，即所有样本概率一致
     # p = 1.0/l
     # pro = []
     # for i in range(0, l):
