@@ -18,7 +18,7 @@ tqdm 1.5.6,
 - Drug sensitivity prediction data were obtained from Genomics of Drug Sensitivity in Cancer, including DNA methylation data in multiple cell lines , Robust Multi-Array Average Normalized gene expression data, and drug sensitivity data for cell lines . A more specific presentation of the data can be found in the supplemental content.  
 [You can download our data here](https://dmpmlab.github.io/Packages.html)
 ## Model structure
-![image](https://github.com/xiexiexiekuan/DeepCentroid/assets/49866501/53691ce9-8fd1-4fa2-a4bd-24c1c2c98560)  
+![图片1](https://github.com/xiexiexiekuan/DeepCentroid/assets/49866501/148ac724-c149-40d3-bb5b-c564537c516f)
 - The DeepCentroid package provides a binary computational model for precision medicine that can integrate heterogeneous data.  
 - It is divided into two phases, feature scanning, and cascade learning, and has stable and efficient predictions in the fields of early diagnosis, prognosis estimation, and anti-cancer drug sensitivity of cancer. 
 - In the feature scanning stage, DeepCentroid can process heterogeneous information of different dimensions and dynamically divide the feature set according to the data size. In the cascade learning stage, DeepCentroid adopts a deeply cascaded strategy and integrates centroid classifiers to make predictions.
