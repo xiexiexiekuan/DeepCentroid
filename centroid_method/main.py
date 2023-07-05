@@ -137,9 +137,9 @@ known_feature_set = False  # 是否添加已知基因集合，本项目仅提供
 is_feature_select = False  # 是否特征筛选
 bootstrap_size = 0.65  # 采样系数，每个分类器依据该比例划分训练集与验证集
 gene_set_num = (int(express_data.shape[0]/50000) + 1)*500  # 特征集合数
-gene_set_num = 100  # 便捷修改处
+# gene_set_num = 100  # 便捷修改处
 gene_set_min = 10  # 特征集合范围的最小值
-gene_set_max = 20  # 特征集合范围的最大值
+gene_set_max = 200  # 特征集合范围的最大值
 max_train_layer = 10  # 最大训练层数
 cut_centroid = False  # 是否剪枝
 function_annotation = False  # 功能注释，启用后需要手动根据应用场景选择不同的注释函数，位置在centroid_compute.verify_centroid_distance
@@ -152,7 +152,7 @@ l_set = []
 p_set = []
 
 # # 5折交叉验证
-# for k in range(0, 1):
+# for k in range(0, 10):
 #
 #     print("第 {} 次交叉验证：".format(k+1))
 #     # 按正负样本比例划分数据集
@@ -182,7 +182,7 @@ p_set = []
 
 
 # 独立验证
-for t in range(0, 2):
+for t in range(0, 10):
     layer_time = time.time()
 
     # 初始化
