@@ -161,14 +161,14 @@ def verify_centroid_distance(gene_partition_list, centroid_vector_, data, functi
                     best_gene_set[d] = best_gene_set[d] + 1
                 else:
                     best_gene_set[d] = 1
-        # data = pandas.DataFrame(data)
-        # data.to_csv('best_set'+str(times_)+'.csv', encoding='utf-8')
+        data = pandas.DataFrame(data)
+        data.to_csv('best_set'+str(times_)+'.csv', encoding='utf-8')
         times_ += 1
-        if times_ == 5:  # Output one file for a 50% cross validation
-            times_ = 0
+        # if times_ == 5:  # Output one file for a 5 cross validation
+            # times_ = 0
 ###############################################################################
 # Due to different data sources and processing methods, the three functions correspond to three types of data and require manual modification by the user
-            gene_annotation.best_gene_symbol_prognosis(best_gene_set)  # prognosis
+            # gene_annotation.best_gene_symbol_prognosis(best_gene_set)  # prognosis
             # gene_annotation.best_gene_symbol_drug(best_gene_set)  # drug
             # gene_annotation.best_gene_symbol_diagnosis(best_gene_set)  # diagnosis
 ###############################################################################

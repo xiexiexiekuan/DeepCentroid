@@ -108,11 +108,11 @@ print(numpy.mean(result_set, axis=0))
 data = pandas.DataFrame(result_set)
 data.to_csv('result_set.csv', encoding='utf-8')
 
-# for p in p_set:
-#     l_set.append(p)
-# data = pandas.DataFrame(l_set)
-# data = data.transpose()
-# data.to_csv('l_set.csv', encoding='utf-8')
+for p in p_set:
+    l_set.append(p)
+data = pandas.DataFrame(l_set)
+data = data.transpose()
+data.to_csv('probability_set.csv', encoding='utf-8')
 
 # Program End Information
 end_time = time.time()
