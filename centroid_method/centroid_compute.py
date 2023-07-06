@@ -5,7 +5,7 @@ import pandas
 from sklearn import metrics
 import gene_annotation
 
-threshold = 0  # 分类阈值
+threshold = 0  # Classification threshold
 times_ = 0
 best_gene_set = {}
 gene_set_num = 0
@@ -16,19 +16,19 @@ def initialization(set_num):
 
 
 
-# 划分数据为指定数量的训练集和验证集
+# Divide the data into a specified number of training and validation sets
 def data_divide(n, bootstrap_size, partition_list, data, label, pro):
-    times = data.shape[0]  # 抽样次数
-    data_ = []  # 每个基因集合对应的训练集，训练标签，验证集，验证标签
+    times = data.shape[0]  # Sampling frequency
+    data_ = []  # Training set, training label, validation set, validation label corresponding to each gene set
     for j in range(0, n):
         tempt_data = []
-        # bootstrap抽样，训练集约为63%
+        # bootstrapSampling, training set approximately 63%
         index = numpy.random.choice(range(0, times), size=int(times * bootstrap_size), replace=False, p=pro)
-        index = numpy.unique(index)  # 去除重复抽样的标签
+        index = numpy.unique(index)  # Removing labels for duplicate sampling
         difference = numpy.array(list(set(numpy.arange(0, times)) - set(index)))
 
 
-        par = data[:, partition_list[j]]  # 根据基因集合提取出数据
+        par = data[:, partition_list[j]]  # Extracting data from gene sets
 
         tempt_data.append(par[index])
         tempt_data.append(label[index])
@@ -38,49 +38,49 @@ def data_divide(n, bootstrap_size, partition_list, data, label, pro):
     return data_
 
 
-# 计算所有基因的质心向量，保存输出的N*M*2的矩阵，即每个基因集合计算出关于质心的M*2个变量
+# Calculate the centroid vectors of all genes and store the output matrix of N * M * 2, that is, calculate the M * 2 variables related to the centroid for each gene set
 def centroid_vector(partition_num, data_cut_set):
     array_centroid = []
-    # 遍历N个基因集合，每个集合里面有M个基因，集合大小是可变的
+    # Traverse N gene sets, each containing M genes, with variable set sizes
     for i in range(0, partition_num):
         # print(var)
         d = data_cut_set[i]
-        array_ = gene_set_centroid(d[0], d[1])  # 第三个参数是特征数
+        array_ = gene_set_centroid(d[0], d[1])  # The third parameter is the number of features
         array_centroid.append(array_)
     return numpy.array(array_centroid, dtype=object)
 
 
-# 对每个基因计算质心的平均向量和权向量
+# Calculate the average vector and weight vector of the centroid for each gene
 def gene_set_centroid(gene_data, sample_category):
     """
-    质心分类器，对每个基因计算质心的平均向量和权向量
-    :param gene_data: 所有基因表达值数据矩阵
-    :param sample_category: 样本类别，将样本区分为正样本1和负样本0
-    :return: 对M个基因都有2个数据，即M*2数据矩阵array_centroid
+    Centroid classifier, which calculates the average vector and weight vector of the centroid for each gene
+    :param gene_data: All gene expression value data matrix
+    :param sample_category: Sample category, distinguishing samples into positive sample 1 and negative sample 0
+    :return: There are 2 data for all M genes, namely the M * 2 data matrix array_ Centroid
     """
     gene_num = gene_data.shape[1]
     p_sample = numpy.where(sample_category == 1)[0]
     c_p_num = len(p_sample)
-    p_data = gene_data[p_sample]  # 取行
+    p_data = gene_data[p_sample]  # Take a row
     p_sum = numpy.sum(p_data, axis=0)
     n_sample = numpy.where(sample_category == 0)[0]
     c_n_num = len(n_sample)
-    n_data = gene_data[n_sample]  # 取行
+    n_data = gene_data[n_sample]  # Take a row
     n_sum = numpy.sum(n_data, axis=0)
     array_centroid = []
     for i in range(0, gene_num):
         if c_p_num == 0:
             c_positive = 0
-            print('c_p_num 除0异常')
+            print('c_p_num Exception except for 0')
         else:
-            c_positive = p_sum[i] / c_p_num  # 计算基因表达平均值
+            c_positive = p_sum[i] / c_p_num  # Calculate average gene expression
         if c_n_num == 0:
             c_negative = 0
-            print('c_n_num 除0异常')
+            print('c_n_num Exception except for 0')
         else:
             c_negative = n_sum[i] / c_n_num
-        c_ = (c_positive + c_negative) / 2  # 质心的平均向量
-        w_ = c_positive - c_negative  # 权向量
+        c_ = (c_positive + c_negative) / 2  # The average vector of the center of mass
+        w_ = c_positive - c_negative  # weight vector
         # print("c = {}, w = {}".format(c, w))
         array_centroid.append([c_, w_])
     return numpy.array(array_centroid)
@@ -89,34 +89,34 @@ def gene_set_centroid(gene_data, sample_category):
 def sample_centroid_distance_alone(centroid_vector, data):
     sample_num = data.shape[0]
 
-    inner_array = []  # 所有样本的质心距离向量
-    for i in range(0, sample_num):  # 依次计算每个样本，共sample_num次
-        inner_product = 0  # 内积
+    inner_array = []  # Centroid distance vector of all samples
+    for i in range(0, sample_num):  # Calculate each sample in sequence, totaling samples_ Num times
+        inner_product = 0  # inner product
         for index in range(0, centroid_vector.shape[0]):
             d = centroid_vector[index]
             inner_product += (data[i][index] - d[0]) * d[1]
 
-        inner_array.append(inner_product)  # sample_num的矩阵
+        inner_array.append(inner_product)  # Sample_ Matrix of num
     return numpy.array(inner_array)
 
-# 分别对每个样本计算其与质心的距离
+# Calculate the distance from the center of mass for each sample separately
 def sample_centroid_distance(gene_partition_list, centroid_vector_, data):
-    inner_array = []  # 所有样本的质心距离向量
-    for index, gene_set in enumerate(gene_partition_list):  # 按行遍历基因集合，共N次
+    inner_array = []  # Centroid distance vector of all samples
+    for index, gene_set in enumerate(gene_partition_list):  # Traverse the gene set by row, N times in total
         data_ = data[:, gene_set]
         # print(centroid_vector_[index].shape)
         # print(data_.shape)
         inner_p_array = sample_centroid_distance_alone(centroid_vector_[index], data_)
-        inner_array.append(inner_p_array)  # sample_num*N*1的矩阵
+        inner_array.append(inner_p_array)  # sample_num*N*1 matrix
 
-    distance = numpy.array(inner_array)  # N*sample_num*1的矩阵
+    distance = numpy.array(inner_array)  # N*sample_num*1 matrix
 
     return distance
 
 
 
 
-# 分别对每个样本计算其与质心的距离--剪枝
+# Calculate the distance from the center of mass for each sample separately - pruning
 def verify_centroid_distance(gene_partition_list, centroid_vector_, data, function_annotation):
 
     list_num = gene_partition_list.shape[0]
@@ -126,11 +126,11 @@ def verify_centroid_distance(gene_partition_list, centroid_vector_, data, functi
     score_l = []
     best_set = []
     for k in range(0, list_num):
-        inner_array = []  # 一个分类器的所有验证样本的质心距离向量   1*样本的矩阵
+        inner_array = []  # The centroid distance vector 1 * matrix of all validation samples for a classifier
         data_ = data[k]
-        verify = data_[2]  # 样本 x 特征
+        verify = data_[2]  # Sample * Features
         label = data_[3]
-        c_vector = centroid_vector_[k]  # 特征 x 2
+        c_vector = centroid_vector_[k]  # Features * 2
         sample_num = len(label)
         for j in range(0, sample_num):
             inner_product = inner(verify[j], c_vector)
@@ -149,10 +149,10 @@ def verify_centroid_distance(gene_partition_list, centroid_vector_, data, functi
         else:
             i = i + 1
 
-    if function_annotation:  # 如果功能注释
+    if function_annotation:  # If functional comments
         global times_, best_gene_set, gene_set_num
-        arr_max = heapq.nlargest(gene_set_num, best_set)  # 获取前 多少 的值并排序
-        index_max = map(best_set.index, arr_max)  # 获取前 多少 的值下标
+        arr_max = heapq.nlargest(gene_set_num, best_set)  # Obtain the top number of values and sort them
+        index_max = map(best_set.index, arr_max)  # Get the index of the top number of values
 
         for h in list(index_max):
             data = numpy.array(gene_partition_list[h])
@@ -164,34 +164,24 @@ def verify_centroid_distance(gene_partition_list, centroid_vector_, data, functi
         # data = pandas.DataFrame(data)
         # data.to_csv('best_set'+str(times_)+'.csv', encoding='utf-8')
         times_ += 1
-        if times_ == 5:  # 一次五折交叉验证输出一个文件
+        if times_ == 5:  # Output one file for a 50% cross validation
             times_ = 0
 ###############################################################################
-# 由于数据来源不同，处理方式不同，因此三个函数对应三种数据，需要用户手动修改
-            # gene_annotation.best_gene_symbol_prognosis(best_gene_set)  # 预后
-            # gene_annotation.best_gene_symbol_drug(best_gene_set)  # 药物
-            gene_annotation.best_gene_symbol_diagnosis(best_gene_set)  # 早期
+# Due to different data sources and processing methods, the three functions correspond to three types of data and require manual modification by the user
+            gene_annotation.best_gene_symbol_prognosis(best_gene_set)  # prognosis
+            # gene_annotation.best_gene_symbol_drug(best_gene_set)  # drug
+            # gene_annotation.best_gene_symbol_diagnosis(best_gene_set)  # diagnosis
 ###############################################################################
 
-    print('删除分类器数目 mcc < 0 : ', i, '删除',i_, '保留')
+    print('Number of deleted classifiers mcc < 0 : ', i, 'delete',i_, 'obtain')
     vector = numpy.array(centroid_vector_[value], dtype=object)
     plist = gene_partition_list[value]
 
     return vector, plist
 
 
-# 一维数组和 特征x2的数组内积--未使用
-def inner(v_data, c_vector):
-    num = len(v_data)
-    s = 0
-    for p in range(0, num):
-        d = c_vector[p]
-        s += (v_data[p] - d[0]) * d[1]
 
-    return s
-
-
-# 根据正负样本比例计算抽样概率
+# Calculate sampling probability based on the proportion of positive and negative samples
 def probability(label):
     l = len(label)
     p_num = sum(label)
@@ -204,9 +194,9 @@ def probability(label):
             pro[i] = n_p
         else:
             pro[i] = p_p
-    # print(pro)  # 此时少数类样本概率更高
+    # print(pro)  # At this point, the probability of minority class samples is higher
 
-    # 下面这部分为上面部分替代品，即所有样本概率一致
+    # The following section is a substitute for the above section, which means that the probability of all samples being consistent
     # p = 1.0/l
     # pro = []
     # for i in range(0, l):
@@ -214,13 +204,13 @@ def probability(label):
     return pro
 
 
-# 根据正负样本比例计算抽样概率
+# Calculate sampling probability based on the proportion of positive and negative samples
 def probability_weight(pro, y_ture, y_pred):
     num = 0
     for i in range(len(y_ture)):
         if y_ture[i] != y_pred[i]:
             num += 1
-    err = num / len(y_ture)  # 平均错误率
+    err = num / len(y_ture)  # average error rate
     if err == 0:
         return pro
 
@@ -237,16 +227,16 @@ def probability_weight(pro, y_ture, y_pred):
     return pro
 
 
-# 根据基因集合计算平均值，中位数
+# Calculate average and median values based on gene sets
 def gene_set_statistics(gene_partition_list, express_data):
     statistics = []
-    for gene_set in gene_partition_list:  # 遍历N个基因集合，每个集合里面有M个基因
+    for gene_set in gene_partition_list:  # Traverse N gene sets, with M genes in each set
         # print(gene_set)
-        gene_list = express_data[:, gene_set]  # 根据该基因集合将数据提取出来成为新的数组
+        gene_list = express_data[:, gene_set]  # Extract data from this gene set into a new array
         # print(gene_list.shape)
-        # mean = numpy.mean(gene_list, axis=0)  # 压缩行，按列计算每个样本的平均数
-        mean = numpy.mean(gene_list, axis=1)  # 压缩列，按行计算每个样本的平均数
-        # median = numpy.median(gene_list, axis=0)  # 压缩行，按列计算每个样本的中位数
+        # mean = numpy.mean(gene_list, axis=0)  # Compress rows and calculate the average number of each sample by column
+        mean = numpy.mean(gene_list, axis=1)  # Compress columns and calculate the average number of each sample by row
+        # median = numpy.median(gene_list, axis=0)  # Compress rows and calculate the median of each sample by column
         # print('mean:', mean.shape)
         statistics.append(numpy.array(mean))
         # statistics.append(numpy.array(median))

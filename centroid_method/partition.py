@@ -15,28 +15,28 @@ def initialization(set_num, set_min, set_max):
     gene_set_min = set_min
     gene_set_max = set_max
 
-# 生成某区间内可重复的一定数量的随机数的方法
+# A method for generating a certain number of repeatable random numbers within a certain interval
 def random_cut_data(max_number):
     random_set_num = gene_set_num
     random_split_list = []
     # print('max_number: ', max_number)
-    # numpy.random.seed(0)  # 设置随机数种子
+    # numpy.random.seed(0)  # Set random number seed
     for i in range(random_set_num):
-        # randint(a, b)生成一个a<=且<b的数
+        # randint(a, b)Generate a number with a<=and<b
         random_range = numpy.random.randint(gene_set_min, gene_set_max)
         # random_range = 5
         if random_range > max_number:
             random_range = max_number
-        # 有放回的随机抽样，一次抽取size个数表示
-        # replace代表抽样之后还放不放回去，False那么一次挑选出来的数都不一样，True有可能会出现重复的，因为前面的抽的放回去了
-        # 每个基因集合的基因可以重复，但是单个基因集合不应该重复，此处应该为False
+        # Random sampling with return, represented by the number of size samples taken at a time
+        # Replace represents whether to put back the samples after sampling. If False, the numbers selected at one time may be different. If True, there may be duplicates because the previous samples were put back
+        # The genes in each gene set can be duplicated, but a single gene set should not be duplicated. This should be false
         random_split_list.append(numpy.random.choice(range(0, max_number), size=random_range, replace=False))
-    # numpy.random.seed()  # 种子重置
-    # 新的numpy版本将-创建不同长度或形状的列表或元组的功能-弃用
+    # numpy.random.seed()  # Seed reset
+    # The new numpy version will - the ability to create lists or tuples of different lengths or shapes - be deprecated
     return numpy.array(random_split_list, dtype=object)
 
 
-# 按照顺序划分基因集合
+# Divide gene sets in order
 def random_cut_data_order(max_number):
     random_set_num = gene_set_num
     global index
@@ -56,47 +56,47 @@ def random_cut_data_order(max_number):
     return numpy.array(random_split_list)
 
 
-# 已知基因集合获取
+# Acquisition of known gene sets
 def get_known_set(gene_partition_list):
     mat = scio.loadmat('../centroid_dataset/prognosis_scale/GSE2034.mat')
-    gene_id = numpy.array(mat['id'])  # 基因编号
+    gene_id = numpy.array(mat['id'])  # Acquisition of known gene sets
     gene_list_known_2 = known_gene_set(gene_id, '../centroid_dataset/known_gene_set/c2.cp.kegg.v7.4.entrez.gmt')
-    print('已知基因集合c2数目：', gene_list_known_2.shape[0])
+    print('Number of known gene sets c2:', gene_list_known_2.shape[0])
     gene_list_known_5 = known_gene_set(gene_id, '../centroid_dataset/known_gene_set/c5.go.bp.v7.4.entrez.gmt')
-    print('已知基因集合c5数目：', gene_list_known_5.shape[0])
-    gene_partition_list = numpy.append(gene_partition_list, gene_list_known_2, axis=0)  # 添加已知基因集合
+    print('Number of known gene sets c5:', gene_list_known_5.shape[0])
+    gene_partition_list = numpy.append(gene_partition_list, gene_list_known_2, axis=0)  # Add a set of known genes
     gene_partition_list = numpy.append(gene_partition_list, gene_list_known_5, axis=0)
     return gene_partition_list
 
 
-# 根据已知基因集合进行集合划分
+# Partition of a set based on known gene sets
 def known_gene_set(gene_id, file_name):
     c_data = csv.reader(open(file_name, 'r'))
     g_set = []
     for var in c_data:
-        g_set.append(numpy.array(var[0].split('\t'))[2:].astype('int32'))  # 数据分割，取出编号
-    gene_symbol_set = numpy.array(g_set, dtype=object)  # 基因编号集合
+        g_set.append(numpy.array(var[0].split('\t'))[2:].astype('int32'))  # Data segmentation, extracting numbers
+    gene_symbol_set = numpy.array(g_set, dtype=object)  # Gene Number Set
     # print(gene_symbol_set)
 
-    gene_subscript_set = []  # 基因下标集合
+    gene_subscript_set = []  # Gene subscript set
     for index_set, gene_set_ in enumerate(gene_symbol_set):
-        gene_subscript_set_current = []  # 当前基因下标集合
+        gene_subscript_set_current = []  # Current gene index set
         # print('len: ', len(gene_set_))
         # print(gene_set_)
-        for index, i in enumerate(gene_set_):  # 遍历一个基因集合
-            find_index = numpy.where(gene_id == i)[0]  # 找到一个基因编号对应的下角标
-            if len(find_index) > 0:  # 若未找到，则为空列表，长度为0
-                # print('添加基因下角标：', find_index[0])
-                gene_subscript_set_current.append(find_index[0])  # 将找到的下角标保存
+        for index, i in enumerate(gene_set_):  # Traverse a gene set
+            find_index = numpy.where(gene_id == i)[0]  # Find a lower corner corresponding to a gene number
+            if len(find_index) > 0:  # If not found, it is an empty list with a length of 0
+                # print('Add gene subscript:', find_index[0])
+                gene_subscript_set_current.append(find_index[0])  # Save the found subscripts
             else:
-                # print('删除基因编号：', i)
-                pass  # 如果没有找到，就跳过该基因，不予保存
+                # print('Delete gene number:', i)
+                pass  # If not found, skip the gene and do not save it
         if gene_set_min <= len(gene_subscript_set_current) <= gene_set_max:
             # print(len(gene_subscript_set_current))
             gene_subscript_set.append(numpy.array(gene_subscript_set_current, dtype=object).astype('int32'))
         else:
-            # print('基因集合过小，予以删除：gene_symbol_set[', index_set, ']')
-            pass  # 将基因集合的基因数量大于等于10的留下。较小的基因集合意义不大
+            # print('The gene set is too small and should be deleted:gene_symbol_set[', index_set, ']')
+            pass  # Leave a set of genes with a number of genes greater than or equal to 10. Smaller gene sets have little significance
     gene_subscript_set = numpy.array(gene_subscript_set, dtype=object)
 
     return gene_subscript_set
