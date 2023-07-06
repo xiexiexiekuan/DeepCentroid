@@ -59,7 +59,7 @@ You can directly run the code, which will enable the known gene set of prognosti
 Add a new gene set:  
 each line of the file represents a set, and the data in each set is separated by tabs. The content of the data should be consistent with the description of the original data, such as gene IDs.
 #### Functional annotation
-Make ```function_annotation = True```
+Make ```function_annotation = True```  
 Then you will get the feature importance ranking file. If you need to correspond to the gene ID, you can see ```gene_annotation.py``` just for prognosis data.  
 
 ## Citation
