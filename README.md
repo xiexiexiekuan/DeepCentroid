@@ -32,7 +32,7 @@
 
 ## Usage
 
-### Cancer prognosis prediction
+### We take 'Cancer prognisis prediction' as an example to show how to use our package.
 Cancer prognostic data were obtained from Gene Expression Omnibus, the training data were GSE2034 and the independent validation data were GSE7390 , GSE11121 and GSE12093. These four datasets include transcriptomic data from breast cancer patients, as well as clinical data such as follow-up information.  
 Before starting to run the code, you need to understand these parameters with default  values:  
 
@@ -59,9 +59,8 @@ You can directly run the code, which will enable the known gene set of prognosti
 Add a new gene set:  
 each line of the file represents a set, and the data in each set is separated by tabs. The content of the data should be consistent with the description of the original data, such as gene IDs.
 #### Functional annotation
-Make ```function_annotation = True```  
-The method of functional annotation is in ```gene_annotation.py```  
-If there is new data that requires obtaining a list of key features, you need to provide the conversion relationship between feature numbers and gene IDs.
+Make ```function_annotation = True```
+Then you will get the feature importance ranking file. If you need to correspond to the gene ID, you can see ```gene_annotation.py``` just for prognosis data.  
 
 ## Citation
 ```
